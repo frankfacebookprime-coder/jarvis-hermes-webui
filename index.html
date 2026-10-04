@@ -1,69 +1,26 @@
-<!doctype html>
-<html lang="es">
-<head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>JARVIS WebUI Advanced</title>
-<style>
-:root{--bg:#070b12;--p:#0d1420;--p2:#111b2a;--line:#22324b;--tx:#edf6ff;--mut:#8ea3bd;--a:#64d8ff;--ok:#55e59a;--bad:#ff7070}
-*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 70% -10%,#15345b,#070b12 36%);color:var(--tx);font:14px Inter,Segoe UI,Arial;display:flex;height:100vh}
-aside{width:255px;padding:18px 13px;border-right:1px solid var(--line);background:#080d16e8}.brand{font-size:20px;font-weight:900;padding:8px 10px 22px}.brand span{color:var(--a)}
-nav button{display:block;width:100%;border:0;background:none;color:var(--mut);padding:12px 14px;text-align:left;border-radius:10px;cursor:pointer;margin:2px 0}nav button:hover,nav button.on{background:#152238;color:white}
-main{flex:1;min-width:0;display:flex;flex-direction:column}.top{height:66px;padding:0 22px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}.status{padding:7px 10px;border:1px solid #275a45;background:#102b22;border-radius:99px;color:var(--ok)}
-.content{padding:22px;overflow:auto;flex:1}.view{display:none}.view.on{display:block}h1{margin:0 0 5px;font-size:25px}.sub{color:var(--mut);margin:0 0 20px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:13px}.card{background:linear-gradient(180deg,#111a29,#0c131e);border:1px solid var(--line);border-radius:14px;padding:16px}.metric{font-size:23px;font-weight:800;margin-top:10px}
-label{display:block;color:var(--mut);font-size:12px;margin-bottom:6px}input,select,textarea{width:100%;background:#080e17;border:1px solid var(--line);color:white;border-radius:9px;padding:11px;outline:none}.btn{border:0;border-radius:9px;padding:10px 14px;font-weight:750;cursor:pointer;background:#eaf8ff;color:#06101a}.btn2{background:#17243a;color:#dcecff;border:1px solid var(--line)}
-.provider{display:grid;grid-template-columns:1fr 2fr 1.4fr auto;gap:9px;align-items:end}.row{display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--line);padding:12px 3px}.tag{font-size:11px;padding:5px 7px;border-radius:7px;background:#16243a;color:#b9cee8}.good{color:var(--ok)}.bad{color:var(--bad)}
-.chat{height:calc(100vh - 155px);display:flex;flex-direction:column}.msgs{flex:1;overflow:auto;padding:6px}.msg{max-width:760px;padding:13px 15px;border-radius:14px;margin:9px 0;white-space:pre-wrap;line-height:1.45}.ai{background:#101b2b;border:1px solid var(--line)}.me{margin-left:auto;background:#15314a}.compose{display:flex;gap:8px;padding-top:10px}.compose input{flex:1}
-.small{font-size:12px;color:var(--mut)}.toggle{display:flex;gap:8px;align-items:center}.toggle input{width:auto}.log{height:330px;font-family:Consolas,monospace}
-@media(max-width:850px){aside{width:75px}.brand{font-size:0}.brand:after{content:"J";font-size:22px;color:var(--a)}nav button{font-size:0}nav button:before{content:"•";font-size:20px}.grid{grid-template-columns:1fr}.provider{grid-template-columns:1fr}}
-</style></head>
-<body>
-<aside><div class="brand">JARVIS <span>ADVANCED</span></div><nav>
-<button class="on" data-v="dash">⌂ &nbsp; Centro de control</button>
-<button data-v="chat">◉ &nbsp; Chat inteligente</button>
-<button data-v="providers">◇ &nbsp; Proveedores / modelos</button>
-<button data-v="memory">▣ &nbsp; Memoria</button>
-<button data-v="skills">⚙ &nbsp; Skills / herramientas</button>
-<button data-v="auto">↻ &nbsp; Automatizaciones</button>
-<button data-v="logs">≡ &nbsp; Logs</button>
-<button data-v="settings">⚙ &nbsp; Configuración</button>
-</nav></aside>
-<main><div class="top"><b>Hermes Control Plane</b><span class="status" id="health">● comprobando...</span></div>
-<div class="content">
-<section id="dash" class="view on"><h1>Centro de control</h1><p class="sub">Panel con failover automático entre modelos y proveedores.</p>
-<div class="grid"><div class="card"><b>Backend</b><div class="metric" id="backendState">—</div><div class="small">API del panel</div></div>
-<div class="card"><b>Modelo usado</b><div class="metric" id="lastModel">—</div><div class="small">última respuesta correcta</div></div>
-<div class="card"><b>Failover</b><div class="metric">Automático</div><div class="small">si un modelo falla, prueba el siguiente</div></div></div>
-<div class="card" style="margin-top:13px"><b>Cómo decide</b><p class="small">Primero usa los modelos en el orden configurado. Ante error, timeout o respuesta inválida, cambia automáticamente al siguiente modelo disponible hasta obtener respuesta.</p></div></section>
-
-<section id="chat" class="view"><h1>Chat inteligente</h1><p class="sub">No necesitas escoger modelo: JARVIS usa el primero disponible y hace failover.</p>
-<div class="chat"><div id="msgs" class="msgs"><div class="msg ai">Listo. Configura al menos un proveedor y pulsa “Detectar modelos”.</div></div>
-<div class="compose"><input id="prompt" placeholder="Pídele algo a JARVIS..."><button class="btn" onclick="send()">Enviar</button></div></div></section>
-
-<section id="providers" class="view"><h1>Proveedores y modelos</h1><p class="sub">Las claves quedan en el servidor, no en el navegador.</p>
-<div class="card provider"><div><label>Nombre</label><input id="pn" value="OmniRoute"></div><div><label>Base URL</label><input id="pu" placeholder="https://servidor/v1"></div><div><label>API key</label><input id="pk" type="password" placeholder="••••••••"></div><button class="btn" onclick="saveProvider()">Guardar y detectar</button></div>
-<div class="card" style="margin-top:12px"><div class="toggle"><input type="checkbox" id="fo" checked disabled><b>Failover automático activado</b></div><p class="small">Ordena modelos con ↑/↓. JARVIS intentará ese orden.</p><div id="models">Sin modelos todavía.</div></div></section>
-
-<section id="memory" class="view"><h1>Memoria</h1><p class="sub">Preparado para conectar la memoria real de Hermes.</p><div class="card"><textarea placeholder="Aquí se integrará búsqueda/edición de memoria de Hermes."></textarea></div></section>
-<section id="skills" class="view"><h1>Skills y herramientas</h1><p class="sub">Área preparada para exponer las capacidades reales de Hermes.</p><div class="grid"><div class="card"><b>Navegación Web</b><p class="small">Pendiente de endpoint Hermes.</p></div><div class="card"><b>Archivos</b><p class="small">Pendiente de endpoint Hermes.</p></div><div class="card"><b>Control PC</b><p class="small">Pendiente de endpoint Hermes.</p></div></div></section>
-<section id="auto" class="view"><h1>Automatizaciones</h1><p class="sub">Tareas y programación de Hermes.</p><div class="card">Módulo preparado para integrar cron/tareas.</div></section>
-<section id="logs" class="view"><h1>Logs</h1><p class="sub">Puedes ver qué modelo falló y cuál tomó el relevo.</p><div class="card"><textarea id="log" class="log" readonly></textarea></div></section>
-<section id="settings" class="view"><h1>Configuración</h1><p class="sub">Ajustes del enrutador inteligente.</p><div class="card"><label>Timeout por modelo (segundos)</label><input id="timeout" type="number" min="5" max="120" value="35"><br><br><button class="btn" onclick="saveSettings()">Guardar</button></div></section>
-</div></main>
-<script>
-const $=x=>document.getElementById(x);
-function show(v){document.querySelectorAll('.view').forEach(x=>x.classList.remove('on'));$(v).classList.add('on');document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('on',x.dataset.v===v))}
-document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>show(b.dataset.v));
-async function api(path,opt={}){let r=await fetch('/api'+path,{headers:{'Content-Type':'application/json',...(opt.headers||{})},...opt});let j=await r.json().catch(()=>({}));if(!r.ok)throw Error(j.detail||j.error||('HTTP '+r.status));return j}
-async function health(){try{let j=await api('/health');$('health').textContent='● online';$('backendState').textContent='Online'}catch(e){$('health').textContent='● backend offline';$('health').className='status bad';$('backendState').textContent='Offline'}}
-async function saveProvider(){try{let j=await api('/providers',{method:'POST',body:JSON.stringify({name:$('pn').value,base_url:$('pu').value,api_key:$('pk').value})});$('pk').value='';renderModels(j.models);log('Proveedor guardado: '+j.name+' | '+j.models.length+' modelos');}catch(e){alert(e.message)}}
-function renderModels(ms){$('models').innerHTML=ms.length?ms.map((m,i)=>`<div class="row"><span>${i+1}. ${esc(m)}</span><span><button class="btn btn2" onclick="move('${escq(m)}',-1)">↑</button> <button class="btn btn2" onclick="move('${escq(m)}',1)">↓</button></span></div>`).join(''):'<p class="small">No se detectaron modelos.</p>'}
-async function move(m,d){let j=await api('/models/reorder',{method:'POST',body:JSON.stringify({model:m,direction:d})});renderModels(j.models)}
-async function send(){let p=$('prompt'),q=p.value.trim();if(!q)return;let box=$('msgs');box.innerHTML+=`<div class="msg me">${esc(q)}</div>`;p.value='';let wait=document.createElement('div');wait.className='msg ai';wait.textContent='Buscando un modelo disponible...';box.appendChild(wait);box.scrollTop=box.scrollHeight;
-try{let j=await api('/chat',{method:'POST',body:JSON.stringify({message:q})});wait.textContent=j.answer; $('lastModel').textContent=j.model; log('OK '+j.provider+' / '+j.model+(j.failed?.length?' | fallaron antes: '+j.failed.join(', '):''));}
-catch(e){wait.textContent='No hubo ningún modelo disponible: '+e.message;log('ERROR '+e.message)}box.scrollTop=box.scrollHeight}
-function log(s){$('log').value+=new Date().toLocaleTimeString()+'  '+s+'\n'}
-function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}function escq(s){return String(s).replace(/'/g,"")}
-async function saveSettings(){await api('/settings',{method:'POST',body:JSON.stringify({timeout:Number($('timeout').value)})});alert('Guardado')}
-health(); api('/models').then(j=>renderModels(j.models)).catch(()=>{});
-$('prompt').addEventListener('keydown',e=>{if(e.key==='Enter')send()});
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>JARVIS Advanced</title>
+<style>:root{--bg:#050912;--card:#0d1624;--line:#21344d;--tx:#eef7ff;--mut:#8fa6c0;--a:#58d6ff;--ok:#4de39b}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 70% -10%,#12355e,var(--bg) 38%);color:var(--tx);font:14px Segoe UI,Arial;display:flex;height:100vh}aside{width:245px;background:#070d17e8;border-right:1px solid var(--line);padding:18px 12px}.brand{font-size:20px;font-weight:900;padding:8px 10px 20px}.brand span{color:var(--a)}nav button{width:100%;display:block;background:none;border:0;color:var(--mut);text-align:left;padding:12px;border-radius:10px;cursor:pointer}nav button.on,nav button:hover{background:#13233a;color:white}main{flex:1;min-width:0}.top{height:64px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 22px}.status{color:var(--ok)}.content{height:calc(100vh - 64px);overflow:auto;padding:22px}.view{display:none}.view.on{display:block}h1{margin:0 0 5px}.sub{color:var(--mut);margin-top:0}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.card{background:linear-gradient(#101b2b,#0b131f);border:1px solid var(--line);border-radius:14px;padding:16px}.metric{font-size:22px;font-weight:800;margin-top:10px}.small{color:var(--mut);font-size:12px}input,textarea{width:100%;background:#07101a;border:1px solid var(--line);color:white;border-radius:9px;padding:11px}.btn{border:0;border-radius:9px;padding:10px 14px;font-weight:700;cursor:pointer}.btn2{background:#17263d;color:white;border:1px solid var(--line)}.provider{display:grid;grid-template-columns:1fr 2fr 1.3fr auto;gap:9px;align-items:end}label{display:block;color:var(--mut);font-size:12px;margin-bottom:6px}.row{display:flex;justify-content:space-between;align-items:center;padding:10px 3px;border-top:1px solid var(--line)}.chat{height:calc(100vh - 160px);display:flex;flex-direction:column}.msgs{flex:1;overflow:auto}.msg{max-width:760px;padding:13px 15px;border-radius:14px;margin:9px 0;white-space:pre-wrap}.ai{background:#101b2b;border:1px solid var(--line)}.me{margin-left:auto;background:#15314a}.compose{display:flex;gap:8px}.compose input{flex:1}.log{height:400px;font-family:Consolas,monospace}@media(max-width:800px){aside{width:70px}.brand{font-size:0}.brand:after{content:"J";font-size:22px;color:var(--a)}nav button{font-size:0}nav button:before{content:"•";font-size:20px}.grid,.provider{grid-template-columns:1fr}}</style></head><body>
+<aside><div class="brand">JARVIS <span>ADVANCED</span></div><nav><button class="on" data-v="dash">⌂ Centro de control</button><button data-v="chat">◉ Chat inteligente</button><button data-v="providers">◇ Proveedores / modelos</button><button data-v="memory">▣ Memoria</button><button data-v="logs">≡ Logs</button><button data-v="settings">⚙ Configuración</button></nav></aside>
+<main><div class="top"><b>JARVIS Control Plane</b><span class="status" id="health">● online</span></div><div class="content">
+<section id="dash" class="view on"><h1>Centro de control</h1><p class="sub">Enrutamiento inteligente, failover y memoria persistente.</p><div class="grid"><div class="card"><b>Backend</b><div class="metric">Online</div></div><div class="card"><b>Modelo usado</b><div class="metric" id="lastModel">—</div></div><div class="card"><b>Memorias</b><div class="metric" id="memCount">0</div></div></div></section>
+<section id="chat" class="view"><h1>Chat inteligente</h1><p class="sub">Usa el modelo prioritario y cambia automáticamente si falla.</p><div class="chat"><div id="msgs" class="msgs"><div class="msg ai">JARVIS listo.</div></div><div class="compose"><input id="prompt" placeholder="Pídele algo a JARVIS..."><button class="btn" onclick="send()">Enviar</button></div></div></section>
+<section id="providers" class="view"><h1>Proveedores y modelos</h1><p class="sub">La API key queda guardada en el servidor.</p><div class="card provider"><div><label>Nombre</label><input id="pn" value="OmniRoute"></div><div><label>Base URL</label><input id="pu" placeholder="https://servidor/v1"></div><div><label>API key</label><input id="pk" type="password"></div><button class="btn" onclick="saveProvider()">Guardar y detectar</button></div><div class="card" style="margin-top:12px"><b>Prioridad de modelos + failover automático</b><div id="models"></div></div></section>
+<section id="memory" class="view"><h1>Memoria persistente</h1><p class="sub">JARVIS incluirá estas memorias en sus conversaciones.</p><div class="card"><div style="display:flex;gap:8px"><input id="mem" placeholder="Ej: Mi proyecto principal se llama JARVIS"><button class="btn" onclick="addMem()">Guardar</button></div><div id="memories"></div></div></section>
+<section id="logs" class="view"><h1>Logs</h1><p class="sub">Respuestas, errores y cambios automáticos de modelo.</p><div class="card"><textarea id="log" class="log" readonly></textarea></div></section>
+<section id="settings" class="view"><h1>Configuración</h1><div class="card"><label>Timeout por modelo</label><input id="timeout" type="number" min="5" max="120"><br><br><label>Personalidad / instrucciones de JARVIS</label><textarea id="system" rows="7"></textarea><br><button class="btn" onclick="saveSettings()">Guardar</button></div></section>
+</div></main><script>
+const $=x=>document.getElementById(x),esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{document.querySelectorAll(".view").forEach(x=>x.classList.remove("on"));$(b.dataset.v).classList.add("on");document.querySelectorAll("nav button").forEach(x=>x.classList.toggle("on",x===b))});
+async function api(p,o={}){let r=await fetch("/api"+p,{headers:{"Content-Type":"application/json"},...o}),j=await r.json().catch(()=>({}));if(!r.ok)throw Error(typeof j.detail==="string"?j.detail:JSON.stringify(j.detail||j));return j}
+let models=[];
+function renderModels(ms){models=ms;$("models").innerHTML=ms.length?ms.map((m,i)=>'<div class="row"><span>'+(i+1)+'. '+esc(m)+'</span><span><button class="btn btn2" onclick="move('+i+',-1)">↑</button> <button class="btn btn2" onclick="move('+i+',1)">↓</button></span></div>').join(""):'<p class="small">Sin modelos.</p>'}
+async function move(i,d){let n=i+d;if(n<0||n>=models.length)return;[models[i],models[n]]=[models[n],models[i]];let j=await api("/models/reorder",{method:"POST",body:JSON.stringify({models})});renderModels(j.models)}
+async function saveProvider(){try{let j=await api("/providers",{method:"POST",body:JSON.stringify({name:$("pn").value,base_url:$("pu").value,api_key:$("pk").value})});$("pk").value="";renderModels(j.models);alert("Listo: "+j.count+" modelos detectados")}catch(e){alert(e.message)}}
+async function send(){let q=$("prompt").value.trim();if(!q)return;$("msgs").innerHTML+='<div class="msg me">'+esc(q)+'</div>';$("prompt").value="";let w=document.createElement("div");w.className="msg ai";w.textContent="Pensando...";$("msgs").appendChild(w);try{let j=await api("/chat",{method:"POST",body:JSON.stringify({message:q})});w.textContent=j.answer;$("lastModel").textContent=j.model;loadLogs()}catch(e){w.textContent="Error: "+e.message}$("msgs").scrollTop=$("msgs").scrollHeight}
+async function loadMem(){let j=await api("/memory");$("memCount").textContent=j.items.length;$("memories").innerHTML=j.items.map(x=>'<div class="row"><span>'+esc(x.text)+'</span><button class="btn btn2" onclick="delMem(\''+x.id+'\')">Eliminar</button></div>').join("")}
+async function addMem(){let t=$("mem").value.trim();if(!t)return;await api("/memory",{method:"POST",body:JSON.stringify({text:t})});$("mem").value="";loadMem()}
+async function delMem(id){await api("/memory/"+id,{method:"DELETE"});loadMem()}
+async function loadLogs(){let j=await api("/logs");$("log").value=j.logs.map(x=>x.time+"  "+x.kind.toUpperCase()+"  "+x.message+(x.model?" | "+x.model:"")).join("\n")}
+async function saveSettings(){await api("/settings",{method:"POST",body:JSON.stringify({timeout:Number($("timeout").value),system_prompt:$("system").value})});alert("Configuración guardada")}
+async function init(){let s=await api("/state");renderModels(s.models);$("timeout").value=s.timeout;$("system").value=s.system_prompt;$("memCount").textContent=s.memory_count;loadMem();loadLogs()}init();$("prompt").addEventListener("keydown",e=>{if(e.key==="Enter")send()});
 </script></body></html>
