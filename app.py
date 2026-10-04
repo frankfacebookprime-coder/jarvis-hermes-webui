@@ -22,7 +22,7 @@ def headers(k): return {"Authorization":f"Bearer {k}","Content-Type":"applicatio
 def event(kind,msg,**extra):
     x=read(LOGS,[]); x.append({"time":datetime.now(timezone.utc).isoformat(),"kind":kind,"message":msg,**extra}); write(LOGS,x[-300:])
 
-class Chat(BaseModel):\n    message:str\n    model:str|None=None
+class Chat(BaseModel):\n    message: str\n    model: str | None = None\n    mode: str = "direct"
 class Provider(BaseModel): name:str; base_url:str; api_key:str
 class Reorder(BaseModel): models:list[str]
 class Settings(BaseModel): timeout:int=35; system_prompt:str="Eres JARVIS, un asistente útil, directo y preciso."
@@ -81,7 +81,7 @@ async def chat(x:Chat):
     mem=read(MEMORY,[])
     memtxt="\n".join("- "+m["text"] for m in mem[-20:])
     sys=c["system_prompt"]+(("\n\nMemoria persistente:\n"+memtxt) if memtxt else "")
-    failed=[]
+    failed=[]\n    ordered=c["models"]\n    if x.model and x.model in ordered:\n        ordered=[x.model]+[m for m in ordered if m!=x.model]
     async with httpx.AsyncClient(timeout=c["timeout"]) as client:
         for p in c["providers"]:
             for model in ordered:
