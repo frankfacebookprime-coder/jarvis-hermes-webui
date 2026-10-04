@@ -1,0 +1,10 @@
+services:
+  jarvis-webui:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "8080"
+    volumes:
+      - jarvis-webui-data:/data
+volumes:
+  jarvis-webui-data:
