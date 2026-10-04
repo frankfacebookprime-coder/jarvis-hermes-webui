@@ -1,10 +1,37 @@
 services:
-  jarvis-webui:
-    build: .
+  hermes-agent:
+    image: nousresearch/hermes-agent:latest
     restart: unless-stopped
+    command: gateway run
+    environment:
+      API_SERVER_ENABLED: "true"
+      API_SERVER_HOST: "0.0.0.0"
+      API_SERVER_PORT: "8642"
+      API_SERVER_KEY: "${HERMES_API_KEY}"
+      CUSTOM_BASE_URL: "${CUSTOM_BASE_URL}"
+      CUSTOM_API_KEY: "${CUSTOM_API_KEY}"
+    volumes:
+      - hermes-data:/opt/data
+    expose:
+      - "8642"
+    shm_size: "1gb"
+
+  jarvis-webui:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - hermes-agent
+    environment:
+      HERMES_URL: "http://hermes-agent:8642/v1"
+      HERMES_API_KEY: "${HERMES_API_KEY}"
+      HERMES_TIMEOUT: "120"
     ports:
       - "8080"
     volumes:
       - jarvis-webui-data:/data
+
 volumes:
+  hermes-data:
   jarvis-webui-data:
