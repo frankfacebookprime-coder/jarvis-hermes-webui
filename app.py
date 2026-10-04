@@ -22,7 +22,7 @@ def headers(k): return {"Authorization":f"Bearer {k}","Content-Type":"applicatio
 def event(kind,msg,**extra):
     x=read(LOGS,[]); x.append({"time":datetime.now(timezone.utc).isoformat(),"kind":kind,"message":msg,**extra}); write(LOGS,x[-300:])
 
-class Chat(BaseModel): message:str
+class Chat(BaseModel):\n    message:str\n    model:str|None=None
 class Provider(BaseModel): name:str; base_url:str; api_key:str
 class Reorder(BaseModel): models:list[str]
 class Settings(BaseModel): timeout:int=35; system_prompt:str="Eres JARVIS, un asistente útil, directo y preciso."
@@ -84,7 +84,7 @@ async def chat(x:Chat):
     failed=[]
     async with httpx.AsyncClient(timeout=c["timeout"]) as client:
         for p in c["providers"]:
-            for model in c["models"]:
+            for model in ordered:
                 try:
                     payload={"model":model,"messages":[{"role":"system","content":sys},{"role":"user","content":x.message}],"stream":False}
                     r=await client.post(p["base_url"].rstrip("/")+"/chat/completions",headers=headers(p["api_key"]),json=payload)
